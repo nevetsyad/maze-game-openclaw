@@ -229,35 +229,8 @@ class InputManager {
     }
 
     setupTouchControls() {
-        const touchArea = document.getElementById('touchArea');
-        if (!touchArea) return;
-        
-        let touchStartX = 0;
-        let touchStartY = 0;
-        
-        touchArea.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        });
-        
-        touchArea.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const touchX = e.touches[0].clientX;
-            const touchY = e.touches[0].clientY;
-            
-            const deltaX = touchX - touchStartX;
-            const deltaY = touchY - touchStartY;
-            
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                this.direction = deltaX > 0 ? 'right' : 'left';
-            } else {
-                this.direction = deltaY > 0 ? 'down' : 'up';
-            }
-        });
-        
-        touchArea.addEventListener('touchend', () => {
-            this.direction = 'none';
-        });
+        // Touch controls removed - gyroscope now used instead
+        console.log('Touch controls disabled, using gyroscope for mobile devices');
     }
 
     setupGyroscopeControls() {

@@ -88,20 +88,15 @@
             display: none;
         }
         
-        .touch-area {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            border: 2px solid white;
-        }
-        
-        .joystick {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid white;
+        .gyro-info {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
         .hidden {
@@ -121,16 +116,17 @@
     <div class="controls-info hidden" id="controlsInfo">
         <strong>Controls:</strong><br>
         🖱️ Arrow Keys / WASD - Move ball<br>
-        📱 Touch controls for mobile
+        📱 Tilt device to move ball (mobile)
     </div>
     
     <!-- Game Canvas -->
     <canvas id="gameCanvas" class="hidden"></canvas>
     
-    <!-- Mobile Controls -->
+    <!-- Mobile Controls - Gyroscope only -->
     <div class="controls" id="mobileControls">
-        <div class="touch-area" id="touchArea"></div>
-        <div class="joystick" id="joystick"></div>
+        <div class="gyro-info">
+            Tilt your device to move the ball
+        </div>
     </div>
 
     <script src="game.js"></script>
