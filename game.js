@@ -219,8 +219,28 @@ class InputManager {
     }
 }
 
-// Initialize the game
-// Removed automatic game initialization on load
-// window.addEventListener('load', () => {
-//     new MazeGame();
-// });
+// Start button functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const startButton = document.getElementById('startButton');
+    const startScreen = document.getElementById('startScreen');
+    const gameCanvas = document.getElementById('gameCanvas');
+    const controlsInfo = document.getElementById('controlsInfo');
+    const mobileControls = document.getElementById('mobileControls');
+    
+    startButton.addEventListener('click', function() {
+        // Hide start screen
+        startScreen.classList.add('hidden');
+        
+        // Show game elements
+        gameCanvas.classList.remove('hidden');
+        controlsInfo.classList.remove('hidden');
+        
+        // Show mobile controls on mobile devices
+        if (window.matchMedia('(pointer: coarse)').matches) {
+            mobileControls.style.display = 'block';
+        }
+        
+        // Initialize game
+        window.mazeGame = new MazeGame();
+    });
+});
