@@ -191,6 +191,11 @@ class InputManager {
         this.direction = 'none';
         this.setupKeyboardControls();
         this.setupTouchControls();
+        
+        // Setup gyroscope controls for mobile devices
+        if (window.matchMedia('(pointer: coarse)').matches) {
+            this.setupGyroscopeControls();
+        }
     }
 
     setupKeyboardControls() {
@@ -251,6 +256,62 @@ class InputManager {
         
         touchArea.addEventListener('touchend', () => {
             this.direction = 'none';
+        });
+    }
+
+    setupGyroscopeControls() {
+        // Check if device orientation is available
+        if (typeof DeviceOrientationEvent !== 'undefined') {
+            // Request permission for iOS devices
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(response => {
+                        if (response === 'granted') {
+                            this.startGyroscopeListening();
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                // Android and other devices
+                this.startGyroscopeListening();
+            }
+        }
+    }
+
+    startGyroscopeListening() {
+        let lastDirection = 'none';
+        let tiltThreshold = 15; // Degrees of tilt required to trigger movement
+        
+        window.addEventListener('deviceorientation', (event) => {
+            // Get device orientation data
+            const gamma = event.gamma; // Left-right tilt (-90 to 90)
+            const beta = event.beta;   // Front-back tilt (-180 to 180)
+            
+            // Convert to directions based on tilt
+            let direction = 'none';
+            
+            // Left-right movement (gamma axis)
+            if (Math.abs(gamma) > tiltThreshold) {
+                if (gamma > 0) {
+                    direction = 'right';
+                } else {
+                    direction = 'left';
+                }
+            }
+            // Front-back movement (beta axis)
+            else if (Math.abs(beta) > tiltThreshold) {
+                if (beta > 0) {
+                    direction = 'down';
+                } else {
+                    direction = 'up';
+                }
+            }
+            
+            // Only update if direction changed to prevent jitter
+            if (direction !== lastDirection) {
+                this.direction = direction;
+                lastDirection = direction;
+            }
         });
     }
 
