@@ -127,7 +127,7 @@ class Ball {
     constructor() {
         this.x = 16;
         this.y = 16;
-        this.speed = 2;
+        this.speed = 200;
     }
 
     updatePosition(direction, deltaTime) {
@@ -220,6 +220,7 @@ class InputManager {
 }
 
 // Initialize the game
-window.addEventListener('load', () => {
-    new MazeGame();
-});
+// Removed automatic game initialization on load
+// window.addEventListener('load', () => {
+//     new MazeGame();
+// });
