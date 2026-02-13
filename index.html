@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Ball - Cross-Platform Game</title>
+    <style>
+        /* Mobile-optimized styling */
+        body {
+            margin: 0;
+            overflow: hidden;
+            touch-action: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+        }
+        
+        /* Start Screen */
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            text-align: center;
+        }
+        
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .game-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .start-button {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-weight: bold;
+        }
+        
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .controls-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            z-index: 100;
+        }
+        
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: none;
+        }
+        
+        .touch-area {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+        }
+        
+        .joystick {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid white;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Start Screen -->
+    <div class="start-screen" id="startScreen">
+        <h1 class="game-title">🎮 Maze Ball</h1>
+        <p class="game-subtitle">Navigate through the maze and reach the goal!</p>
+        <button class="start-button" id="startButton">Start Game</button>
+    </div>
+    
+    <!-- Game Controls Info -->
+    <div class="controls-info hidden" id="controlsInfo">
+        <strong>Controls:</strong><br>
+        🖱️ Arrow Keys / WASD - Move ball<br>
+        📱 Touch controls for mobile
+    </div>
+    
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" class="hidden"></canvas>
+    
+    <!-- Mobile Controls -->
+    <div class="controls" id="mobileControls">
+        <div class="touch-area" id="touchArea"></div>
+        <div class="joystick" id="joystick"></div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
