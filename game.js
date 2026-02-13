@@ -194,6 +194,7 @@ class InputManager {
         
         // Setup gyroscope controls for mobile devices
         if (window.matchMedia('(pointer: coarse)').matches) {
+            console.log('Mobile device detected, setting up gyroscope controls...');
             this.setupGyroscopeControls();
         }
     }
@@ -260,27 +261,46 @@ class InputManager {
     }
 
     setupGyroscopeControls() {
+        console.log('Setting up gyroscope controls...');
+        
         // Check if device orientation is available
-        if (typeof DeviceOrientationEvent !== 'undefined') {
-            // Request permission for iOS devices
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
-                    .then(response => {
-                        if (response === 'granted') {
-                            this.startGyroscopeListening();
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                // Android and other devices
-                this.startGyroscopeListening();
-            }
+        if (typeof DeviceOrientationEvent === 'undefined') {
+            console.log('Device orientation not supported');
+            return;
+        }
+        
+        // Check if we're on a mobile device
+        if (!window.matchMedia('(pointer: coarse)').matches) {
+            console.log('Not a mobile device, skipping gyroscope setup');
+            return;
+        }
+        
+        // Request permission for iOS devices
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            console.log('Requesting iOS device orientation permission...');
+            DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                    console.log('iOS permission response:', response);
+                    if (response === 'granted') {
+                        this.startGyroscopeListening();
+                    } else {
+                        console.log('iOS permission denied');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error requesting iOS permission:', error);
+                });
+        } else {
+            // Android and other devices
+            console.log('Starting gyroscope listening for Android/other devices');
+            this.startGyroscopeListening();
         }
     }
 
     startGyroscopeListening() {
+        console.log('Starting gyroscope listening...');
         let lastDirection = 'none';
-        let tiltThreshold = 15; // Degrees of tilt required to trigger movement
+        let tiltThreshold = 8; // Reduced threshold for better sensitivity
         
         window.addEventListener('deviceorientation', (event) => {
             // Get device orientation data
@@ -290,29 +310,40 @@ class InputManager {
             // Convert to directions based on tilt
             let direction = 'none';
             
-            // Left-right movement (gamma axis)
-            if (Math.abs(gamma) > tiltThreshold) {
-                if (gamma > 0) {
-                    direction = 'right';
-                } else {
-                    direction = 'left';
+            // Log the tilt values for debugging
+            if (gamma !== null && beta !== null) {
+                console.log(`Tilt - Gamma: ${gamma}°, Beta: ${beta}°`);
+                
+                // Left-right movement (gamma axis)
+                if (Math.abs(gamma) > tiltThreshold) {
+                    if (gamma > 0) {
+                        direction = 'right';
+                    } else {
+                        direction = 'left';
+                    }
                 }
-            }
-            // Front-back movement (beta axis)
-            else if (Math.abs(beta) > tiltThreshold) {
-                if (beta > 0) {
-                    direction = 'down';
-                } else {
-                    direction = 'up';
+                // Front-back movement (beta axis)
+                else if (Math.abs(beta) > tiltThreshold) {
+                    if (beta > 0) {
+                        direction = 'down';
+                    } else {
+                        direction = 'up';
+                    }
                 }
-            }
-            
-            // Only update if direction changed to prevent jitter
-            if (direction !== lastDirection) {
-                this.direction = direction;
-                lastDirection = direction;
+                
+                // Only update if direction changed to prevent jitter
+                if (direction !== lastDirection) {
+                    this.direction = direction;
+                    lastDirection = direction;
+                    console.log('Direction changed to:', direction);
+                }
             }
         });
+        
+        // Add a test after 5 seconds to see if events are working
+        setTimeout(() => {
+            console.log('Checking if gyroscope events are being received...');
+        }, 5000);
     }
 
     getInput() {
