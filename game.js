@@ -791,18 +791,15 @@ class InputManager {
             
             if (success) {
                 this.gyroEnabled = true;
-                this.inputMode = 'gyro';
                 console.log('Gyroscope enabled successfully');
                 
                 // Show calibration instructions
                 this.showCalibrationInstructions();
             } else {
                 console.log('Gyroscope not available, falling back to touch controls');
-                this.inputMode = 'touch';
             }
         } catch (error) {
             console.error('Error setting up gyroscope:', error);
-            this.inputMode = 'touch';
         }
     }
     
@@ -936,8 +933,10 @@ class InputManager {
             } else {
                 return y > 0 ? 'down' : 'up';
             }
+        } else if (this.inputMode === 'touch') {
+            return this.direction;
         } else {
-            // For both touch and keyboard modes, return the direction
+            // For keyboard mode (desktop)
             return this.direction;
         }
     }
