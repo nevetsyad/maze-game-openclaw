@@ -56,8 +56,12 @@ class MazeGame {
     }
 
     gameLoop() {
-        if (!this.gameStarted) return;
+        if (!this.gameStarted) {
+            console.log('Game not started, skipping game loop');
+            return;
+        }
         
+        console.log('Game loop running...');
         const deltaTime = 1000 / 60; // 60fps
         
         // Update score and time
@@ -72,6 +76,7 @@ class MazeGame {
         
         // Update ball position
         const input = this.inputManager.getInput();
+        console.log('Input received:', input);
         this.ball.updatePosition(input, deltaTime, this.maze);
         
         // Draw ball
@@ -655,6 +660,7 @@ class Ball {
     }
 
     updatePosition(direction, deltaTime, maze) {
+        console.log('Ball updatePosition called with direction:', direction);
         const movement = this.currentSpeed * deltaTime / 1000;
         
         // Update collision cooldown
@@ -670,15 +676,19 @@ class Ball {
             switch (direction) {
                 case 'up':
                     newY -= movement / 10; // Convert to grid units
+                    console.log('Moving up: newY =', newY);
                     break;
                 case 'down':
                     newY += movement / 10;
+                    console.log('Moving down: newY =', newY);
                     break;
                 case 'left':
                     newX -= movement / 10;
+                    console.log('Moving left: newX =', newX);
                     break;
                 case 'right':
                     newX += movement / 10;
+                    console.log('Moving right: newX =', newX);
                     break;
             }
         } else if (typeof direction === 'object' && direction.x !== undefined && direction.y !== undefined) {
@@ -824,29 +834,38 @@ class InputManager {
     }
 
     setupKeyboardControls() {
+        console.log('Setting up keyboard controls...');
+        
+        // Add global keyboard listeners that work regardless of focus
         document.addEventListener('keydown', (e) => {
+            console.log('Keydown event:', e.key);
             // Use keyboard controls on desktop
             if (!this.isMobile) {
+                e.preventDefault(); // Prevent default behavior
                 switch (e.key) {
                     case 'ArrowUp':
                     case 'w':
                     case 'W':
                         this.direction = 'up';
+                        console.log('Direction set to: up');
                         break;
                     case 'ArrowDown':
                     case 's':
                     case 'S':
                         this.direction = 'down';
+                        console.log('Direction set to: down');
                         break;
                     case 'ArrowLeft':
                     case 'a':
                     case 'A':
                         this.direction = 'left';
+                        console.log('Direction set to: left');
                         break;
                     case 'ArrowRight':
                     case 'd':
                     case 'D':
                         this.direction = 'right';
+                        console.log('Direction set to: right');
                         break;
                     default:
                         this.direction = 'none';
@@ -857,6 +876,7 @@ class InputManager {
         document.addEventListener('keyup', () => {
             if (!this.isMobile) {
                 this.direction = 'none';
+                console.log('Direction reset to: none');
             }
         });
     }
