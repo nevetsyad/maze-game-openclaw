@@ -29,6 +29,12 @@ class MazeGame {
             this.ball = new Ball();
             this.inputManager = new InputManager();
             this.gameStarted = true;
+            
+            // Connect analog speed from input manager to ball
+            this.inputManager.setBallSpeed = (speed) => {
+                this.ball.setSpeed(speed);
+            };
+            
             console.log('Game objects created successfully');
             requestAnimationFrame(() => this.gameLoop());
         } catch (error) {
@@ -159,11 +165,16 @@ class Ball {
     constructor() {
         this.x = 1; // Start position
         this.y = 1;
-        this.speed = 200;
+        this.baseSpeed = 200; // Base speed for keyboard controls
+        this.currentSpeed = this.baseSpeed;
+    }
+
+    setSpeed(speed) {
+        this.currentSpeed = speed;
     }
 
     updatePosition(direction, deltaTime) {
-        const movement = this.speed * deltaTime / 1000;
+        const movement = this.currentSpeed * deltaTime / 1000;
         
         switch (direction) {
             case 'up':
@@ -271,52 +282,79 @@ class InputManager {
     }
 
     startGyroscopeListening() {
-        console.log('Starting gyroscope listening...');
-        let lastDirection = 'none';
-        let tiltThreshold = 8; // Reduced threshold for better sensitivity
+        console.log('Starting analog gyroscope listening...');
+        
+        // Analog control parameters
+        this.deadZone = 5; // Minimum tilt to trigger movement
+        this.maxTilt = 30; // Maximum active tilt range
+        this.maxSpeed = 10; // Maximum ball speed (units per second)
+        
+        // Current analog values
+        this.currentSpeed = 0;
+        this.targetSpeed = 0;
+        this.currentDirection = { x: 0, y: 0 };
         
         window.addEventListener('deviceorientation', (event) => {
-            // Get device orientation data
             const gamma = event.gamma; // Left-right tilt (-90 to 90)
             const beta = event.beta;   // Front-back tilt (-180 to 180)
             
-            // Convert to directions based on tilt
-            let direction = 'none';
-            
-            // Log the tilt values for debugging
             if (gamma !== null && beta !== null) {
                 console.log(`Tilt - Gamma: ${gamma}°, Beta: ${beta}°`);
                 
-                // Left-right movement (gamma axis)
-                if (Math.abs(gamma) > tiltThreshold) {
-                    if (gamma > 0) {
-                        direction = 'right';
-                    } else {
-                        direction = 'left';
-                    }
-                }
-                // Front-back movement (beta axis)
-                else if (Math.abs(beta) > tiltThreshold) {
-                    if (beta > 0) {
-                        direction = 'down';
-                    } else {
-                        direction = 'up';
-                    }
+                // Calculate movement direction and magnitude
+                let moveX = 0, moveY = 0;
+                
+                // Left-right movement with analog magnitude
+                if (Math.abs(gamma) > this.deadZone) {
+                    moveX = gamma > 0 ? gamma / this.maxTilt : -Math.abs(gamma) / this.maxTilt;
+                    moveX = Math.max(-1, Math.min(1, moveX)); // Clamp to -1 to 1
                 }
                 
-                // Only update if direction changed to prevent jitter
-                if (direction !== lastDirection) {
-                    this.direction = direction;
-                    lastDirection = direction;
-                    console.log('Direction changed to:', direction);
+                // Front-back movement with analog magnitude
+                if (Math.abs(beta) > this.deadZone) {
+                    moveY = beta > 0 ? beta / this.maxTilt : -Math.abs(beta) / this.maxTilt;
+                    moveY = Math.max(-1, Math.min(1, moveY)); // Clamp to -1 to 1
                 }
+                
+                // Calculate total speed magnitude
+                const magnitude = Math.sqrt(moveX * moveX + moveY * moveY);
+                this.targetSpeed = magnitude * this.maxSpeed;
+                
+                // Store direction
+                this.currentDirection = { x: moveX, y: moveY };
+                
+                console.log(`Analog input - Speed: ${this.targetSpeed.toFixed(2)}, Direction: (${moveX.toFixed(2)}, ${moveY.toFixed(2)})`);
             }
         });
         
-        // Add a test after 5 seconds to see if events are working
-        setTimeout(() => {
-            console.log('Checking if gyroscope events are being received...');
-        }, 5000);
+        // Smooth speed interpolation
+        setInterval(() => {
+            this.currentSpeed += (this.targetSpeed - this.currentSpeed) * 0.1; // Smooth interpolation
+            
+            // Convert analog input to digital direction for ball movement
+            if (this.currentSpeed > 0.1) {
+                const { x, y } = this.currentDirection;
+                
+                // Determine primary direction based on which axis has more influence
+                if (Math.abs(x) > Math.abs(y)) {
+                    this.direction = x > 0 ? 'right' : 'left';
+                } else {
+                    this.direction = y > 0 ? 'down' : 'up';
+                }
+                
+                // Update ball speed with analog value
+                if (this.setBallSpeed) {
+                    this.setBallSpeed(this.currentSpeed * 20); // Scale for appropriate movement
+                }
+            } else {
+                this.direction = 'none';
+                
+                // Reset to base speed when no tilt input
+                if (this.setBallSpeed) {
+                    this.setBallSpeed(200); // Base speed for keyboard controls
+                }
+            }
+        }, 16); // ~60Hz update rate
     }
 
     getInput() {
