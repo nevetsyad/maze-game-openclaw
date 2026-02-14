@@ -371,7 +371,9 @@ class InputManager {
         }
         
         // Check if we're on a mobile device
-        if (!window.matchMedia('(pointer: coarse)').matches) {
+        if (window.matchMedia('(pointer: coarse)').matches) {
+            console.log('Mobile device detected, setting up gyroscope controls...');
+        } else {
             console.log('Not a mobile device, skipping gyroscope setup');
             return;
         }
