@@ -63,14 +63,14 @@ class MazeGame {
         try {
             // Use dynamic maze size based on difficulty
             this.mazeGenerator = new MazeGenerator(this.mazeSize.width, this.mazeSize.height);
-            this.maze = this.mazeGenerator.generate();
+            this.maze = this.mazeGenerator.generate(this.difficulty);
             this.ball = new Ball();
             this.inputManager = new InputManager();
             this.gameStarted = true;
             this.score = 0;
             this.startTime = Date.now();
             
-            console.log(`Game objects created successfully - Maze size: ${this.mazeSize.width}x${this.mazeSize.height}`);
+            console.log(`Game objects created successfully - Maze size: ${this.mazeSize.width}x${this.mazeSize.height}, Difficulty: ${this.difficulty}`);
             requestAnimationFrame(() => this.gameLoop());
         } catch (error) {
             console.error('Error in initGame:', error);
@@ -266,10 +266,54 @@ class MazeGenerator {
         this.width = width;
         this.height = height;
         this.complexity = Math.min(0.3, (width * height) / 1000); // Complexity based on size
+        
+        // Define difficulty levels
+        this.difficulties = {
+            easy: { width: 10, height: 10 },
+            medium: { width: 15, height: 15 },
+            hard: { width: 20, height: 20 }
+        };
+        
+        // Predefined solvable mazes
+        this.predefinedMazes = {
+            easy: this.createPredefinedEasy(),
+            medium: this.createPredefinedMedium(),
+            hard: this.createPredefinedHard()
+        };
     }
 
-    // Generate maze using recursive backtracking algorithm
-    generate() {
+    // Check if we should use predefined maze or generate random
+    shouldUsePredefined(difficulty) {
+        // Use predefined mazes 70% of the time, random 30% for variety
+        return Math.random() < 0.7;
+    }
+
+    // Generate maze using predefined or random approach
+    generate(difficulty = 'medium') {
+        // Check if we should use predefined maze
+        if (this.shouldUsePredefined(difficulty) && this.predefinedMazes[difficulty]) {
+            console.log(`Using predefined ${difficulty} maze`);
+            let maze = this.predefinedMazes[difficulty];
+            // Ensure predefined maze is solvable
+            if (!this.isMazeSolvable(maze)) {
+                console.log(`Predefined maze not solvable, fixing...`);
+                maze = this.ensureSolvable(JSON.parse(JSON.stringify(maze)));
+            }
+            return maze;
+        }
+        
+        console.log(`Generating random ${difficulty} maze`);
+        let maze = this.generateRandom();
+        // Ensure random maze is solvable
+        if (!this.isMazeSolvable(maze)) {
+            console.log(`Random maze not solvable, fixing...`);
+            maze = this.ensureSolvable(JSON.parse(JSON.stringify(maze)));
+        }
+        return maze;
+    }
+    
+    // Generate random maze using recursive backtracking algorithm
+    generateRandom() {
         // Initialize maze with all walls
         const maze = Array(this.height).fill().map(() => Array(this.width).fill(1));
         
@@ -285,6 +329,133 @@ class MazeGenerator {
         
         // Add some strategic dead ends and challenges
         this.addDeadEnds(maze);
+        
+        return maze;
+    }
+    
+    // Create predefined easy maze (10x10)
+    createPredefinedEasy() {
+        const maze = Array(10).fill().map(() => Array(10).fill(1));
+        
+        // Create a simple but interesting maze with guaranteed path
+        const path = [
+            [1,1], [1,2], [1,3], [2,3], [3,3], [3,4], [3,5], [4,5], [5,5], [5,6],
+            [5,7], [6,7], [7,7], [7,8], [7,9], [8,9]
+        ];
+        
+        // Carve main path
+        path.forEach(([x, y]) => {
+            if (x < 10 && y < 10) maze[y][x] = 0;
+        });
+        
+        // Add some additional paths for variety
+        const extraPaths = [[2,1], [2,2], [4,3], [4,4], [6,5], [6,6], [8,7], [8,8]];
+        extraPaths.forEach(([x, y]) => {
+            if (x < 10 && y < 10) maze[y][x] = 0;
+        });
+        
+        // Ensure borders are walls
+        for (let y = 0; y < 10; y++) {
+            for (let x = 0; x < 10; x++) {
+                if (x === 0 || x === 9 || y === 0 || y === 9) {
+                    maze[y][x] = 1;
+                }
+            }
+        }
+        
+        // Guarantee start and goal are clear
+        maze[1][1] = 0; // Start
+        maze[8][9] = 0; // Goal
+        
+        return maze;
+    }
+    
+    // Create predefined medium maze (15x15)
+    createPredefinedMedium() {
+        const maze = Array(15).fill().map(() => Array(15).fill(1));
+        
+        // Create a more complex but guaranteed solvable maze
+        const mainPath = [
+            [1,1], [1,2], [1,3], [2,3], [3,3], [3,4], [3,5], [4,5], [5,5], [5,6],
+            [5,7], [6,7], [7,7], [7,8], [7,9], [8,9], [8,10], [8,11], [9,11],
+            [10,11], [11,11], [11,12], [11,13], [12,13], [13,13], [13,14]
+        ];
+        
+        // Carve main path
+        mainPath.forEach(([x, y]) => {
+            if (x < 15 && y < 15) maze[y][x] = 0;
+        });
+        
+        // Add branch paths for complexity
+        const branches = [
+            [2,1], [2,2], [4,3], [4,4], [4,6], [6,5], [6,6], [6,8], [6,9],
+            [9,10], [9,9], [9,8], [10,10], [10,9], [12,12], [12,11]
+        ];
+        branches.forEach(([x, y]) => {
+            if (x < 15 && y < 15) maze[y][x] = 0;
+        });
+        
+        // Ensure borders are walls
+        for (let y = 0; y < 15; y++) {
+            for (let x = 0; x < 15; x++) {
+                if (x === 0 || x === 14 || y === 0 || y === 14) {
+                    maze[y][x] = 1;
+                }
+            }
+        }
+        
+        // Guarantee start and goal are clear
+        maze[1][1] = 0; // Start
+        maze[13][14] = 0; // Goal
+        
+        return maze;
+    }
+    
+    // Create predefined hard maze (20x20)
+    createPredefinedHard() {
+        const maze = Array(20).fill().map(() => Array(20).fill(1));
+        
+        // Create a complex maze with multiple possible routes
+        const mainPath = [
+            [1,1], [1,2], [1,3], [1,4], [1,5], [2,5], [3,5], [3,6], [3,7], [4,7],
+            [5,7], [5,8], [5,9], [6,9], [7,9], [7,10], [7,11], [8,11], [9,11],
+            [10,11], [11,11], [11,12], [11,13], [11,14], [12,14], [13,14], [13,15],
+            [13,16], [14,16], [15,16], [15,17], [15,18], [16,18], [17,18], [18,18]
+        ];
+        
+        // Carve main path
+        mainPath.forEach(([x, y]) => {
+            if (x < 20 && y < 20) maze[y][x] = 0;
+        });
+        
+        // Add multiple alternative routes
+        const altRoutes = [
+            // Upper route
+            [2,1], [2,2], [2,3], [2,4], [4,4], [4,3], [4,2], [4,1],
+            // Middle route
+            [6,8], [6,7], [6,6], [8,10], [8,9], [8,8], [8,7], [10,10],
+            // Lower route
+            [14,15], [14,14], [14,13], [16,15], [16,14], [16,13], [17,17], [17,16],
+            // Side branches
+            [3,1], [5,1], [7,1], [9,1], [11,1], [13,1], [15,1], [17,1],
+            [3,19], [5,19], [7,19], [9,19], [11,19], [13,19], [15,19], [17,19]
+        ];
+        altRoutes.forEach(([x, y]) => {
+            if (x < 20 && y < 20) maze[y][x] = 0;
+        });
+        
+        // Ensure borders are walls
+        for (let y = 0; y < 20; y++) {
+            for (let x = 0; x < 20; x++) {
+                if (x === 0 || x === 19 || y === 0 || y === 19) {
+                    maze[y][x] = 1;
+                }
+            }
+        }
+        
+        // Guarantee start and goal are clear
+        maze[1][1] = 0; // Start
+        maze[18][18] = 0; // Goal
         
         return maze;
     }
@@ -384,6 +555,76 @@ class MazeGenerator {
             const j = Math.floor(Math.random() * (i + 1));
             [array[i], array[j]] = [array[j], array[i]];
         }
+    }
+    
+    // Verify maze is solvable using BFS
+    isMazeSolvable(maze) {
+        const width = maze[0].length;
+        const height = maze.length;
+        const start = [1, 1];
+        const goal = [height - 2, width - 2];
+        
+        // BFS to check if there's a path from start to goal
+        const queue = [start];
+        const visited = new Set();
+        visited.add(`${start[0]},${start[1]}`);
+        
+        const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]; // down, right, up, left
+        
+        while (queue.length > 0) {
+            const [y, x] = queue.shift();
+            
+            // Check if we reached the goal
+            if (y === goal[0] && x === goal[1]) {
+                return true;
+            }
+            
+            // Explore all directions
+            for (const [dy, dx] of directions) {
+                const newY = y + dy;
+                const newX = x + dx;
+                const key = `${newY},${newX}`;
+                
+                // Check if new position is valid and not visited
+                if (newY >= 0 && newY < height && 
+                    newX >= 0 && newX < width && 
+                    maze[newY][newX] === 0 && 
+                    !visited.has(key)) {
+                    
+                    visited.add(key);
+                    queue.push([newY, newX]);
+                }
+            }
+        }
+        
+        return false; // No path found
+    }
+    
+    // Ensure maze is solvable by creating guaranteed paths
+    ensureSolvable(maze) {
+        const width = maze[0].length;
+        const height = maze.length;
+        
+        // Create a simple guaranteed path from start to goal
+        for (let i = 1; i < width - 1; i++) {
+            // Top row path
+            if (maze[1][i] === 1) maze[1][i] = 0;
+            // Bottom row path  
+            if (maze[height - 2][i] === 1) maze[height - 2][i] = 0;
+        }
+        
+        for (let i = 1; i < height - 1; i++) {
+            // Left column path
+            if (maze[i][1] === 1) maze[i][1] = 0;
+            // Right column path
+            if (maze[i][width - 2] === 1) maze[i][width - 2] = 0;
+        }
+        
+        // Ensure start and goal positions are clear
+        maze[1][1] = 0; // Start
+        maze[height - 2][width - 2] = 0; // Goal
+        
+        return maze;
     }
 }
 
