@@ -56,12 +56,8 @@ class MazeGame {
     }
 
     gameLoop() {
-        if (!this.gameStarted) {
-            console.log('Game not started, skipping game loop');
-            return;
-        }
+        if (!this.gameStarted) return;
         
-        console.log('Game loop running...');
         const deltaTime = 1000 / 60; // 60fps
         
         // Update score and time
@@ -76,7 +72,6 @@ class MazeGame {
         
         // Update ball position
         const input = this.inputManager.getInput();
-        console.log('Input received:', input);
         this.ball.updatePosition(input, deltaTime, this.maze);
         
         // Draw ball
@@ -829,9 +824,7 @@ class InputManager {
     }
 
     setupKeyboardControls() {
-        console.log('Setting up keyboard controls...');
         document.addEventListener('keydown', (e) => {
-            console.log('Keydown event:', e.key);
             // Use keyboard controls on desktop
             if (!this.isMobile) {
                 switch (e.key) {
@@ -839,25 +832,21 @@ class InputManager {
                     case 'w':
                     case 'W':
                         this.direction = 'up';
-                        console.log('Direction set to: up');
                         break;
                     case 'ArrowDown':
                     case 's':
                     case 'S':
                         this.direction = 'down';
-                        console.log('Direction set to: down');
                         break;
                     case 'ArrowLeft':
                     case 'a':
                     case 'A':
                         this.direction = 'left';
-                        console.log('Direction set to: left');
                         break;
                     case 'ArrowRight':
                     case 'd':
                     case 'D':
                         this.direction = 'right';
-                        console.log('Direction set to: right');
                         break;
                     default:
                         this.direction = 'none';
@@ -868,7 +857,6 @@ class InputManager {
         document.addEventListener('keyup', () => {
             if (!this.isMobile) {
                 this.direction = 'none';
-                console.log('Direction reset to: none');
             }
         });
     }
@@ -925,8 +913,6 @@ class InputManager {
     }
 
     getInput() {
-        console.log('getInput called - inputMode:', this.inputMode, 'gyroEnabled:', this.gyroEnabled, 'direction:', this.direction);
-        
         // Priority order: Gyroscope > Touch > Keyboard
         if (this.gyroEnabled && this.inputMode === 'gyro') {
             this.updateGyroMovement();
@@ -938,26 +924,19 @@ class InputManager {
             const threshold = 0.1;
             
             if (Math.abs(x) < threshold && Math.abs(y) < threshold) {
-                console.log('Gyro: below threshold, returning none');
                 return 'none';
             }
             
             // Determine primary direction
             if (Math.abs(x) > Math.abs(y)) {
-                const dir = x > 0 ? 'right' : 'left';
-                console.log('Gyro: returning', dir);
-                return dir;
+                return x > 0 ? 'right' : 'left';
             } else {
-                const dir = y > 0 ? 'down' : 'up';
-                console.log('Gyro: returning', dir);
-                return dir;
+                return y > 0 ? 'down' : 'up';
             }
         } else if (this.inputMode === 'touch') {
-            console.log('Touch mode, returning direction:', this.direction);
             return this.direction;
         } else {
             // For keyboard mode (desktop)
-            console.log('Keyboard mode, returning direction:', this.direction);
             return this.direction;
         }
     }
