@@ -11,7 +11,7 @@ class MazeGame {
         this.setupResponsive();
         
         // Game settings
-        this.mazeSize = { width: 15, height: 15 }; // Fixed size maze
+        this.mazeSize = { width: 10, height: 10 }; // Fixed size maze
         this.score = 0;
         this.startTime = Date.now();
         
