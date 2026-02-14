@@ -70,9 +70,6 @@ class MazeGame {
         // Draw maze
         this.drawMaze();
         
-        // Update gyroscope movement before getting input
-        this.inputManager.updateGyroMovement();
-        
         // Update ball position
         const input = this.inputManager.getInput();
         this.ball.updatePosition(input, deltaTime, this.maze);
@@ -939,9 +936,8 @@ class InputManager {
             } else {
                 return y > 0 ? 'down' : 'up';
             }
-        } else if (this.inputMode === 'touch') {
-            return this.direction;
         } else {
+            // For both touch and keyboard modes, return the direction
             return this.direction;
         }
     }
