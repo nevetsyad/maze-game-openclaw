@@ -57,7 +57,7 @@ class MazeGame {
         // Update ball position
         const direction = this.inputManager.getInput();
         if (direction !== 'none') {
-            this.ball.updatePosition(direction, deltaTime);
+            this.ball.updatePosition(direction, deltaTime, this.maze);
         }
         
         // Draw ball
@@ -66,8 +66,47 @@ class MazeGame {
         // Draw goal
         this.drawGoal();
         
+        // Check win condition
+        this.checkWinCondition();
+        
         // Continue game loop
         requestAnimationFrame(() => this.gameLoop());
+    }
+    
+    // Check if ball has reached the goal
+    checkWinCondition() {
+        const goalX = this.maze[0].length - 1; // Rightmost column
+        const goalY = this.maze.length - 1;   // Bottom row
+        
+        // Check if ball is at goal position (with some tolerance)
+        const tolerance = 0.5; // Grid units
+        if (Math.abs(this.ball.x - goalX) < tolerance && 
+            Math.abs(this.ball.y - goalY) < tolerance) {
+            
+            this.gameWon();
+        }
+    }
+    
+    // Handle game win
+    gameWon() {
+        if (!this.gameWon) { // Prevent multiple triggers
+            this.gameWon = true;
+            this.gameStarted = false;
+            
+            // Show win message
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            this.ctx.fillStyle = '#4ecdc4';
+            this.ctx.font = 'bold 48px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('🎉 You Win! 🎉', this.canvas.width / 2, this.canvas.height / 2);
+            
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = '24px Arial';
+            this.ctx.fillText('Refresh to play again', this.canvas.width / 2, this.canvas.height / 2 + 50);
+        }
+    }
     }
 
     drawMaze() {
@@ -102,7 +141,15 @@ class MazeGame {
         const ballY = offsetY + this.ball.y * cellSize + cellSize / 2;
         const ballRadius = cellSize / 3;
         
-        this.ctx.fillStyle = '#ff6b6b';
+        // Change color based on collision state
+        if (this.ball.collisionCooldown > 0) {
+            // Flash red when colliding
+            const flashIntensity = Math.sin(this.ball.collisionCooldown / 50) * 0.5 + 0.5;
+            this.ctx.fillStyle = `rgba(255, 107, 107, ${flashIntensity})`;
+        } else {
+            this.ctx.fillStyle = '#ff6b6b';
+        }
+        
         this.ctx.beginPath();
         this.ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
         this.ctx.fill();
@@ -138,7 +185,7 @@ class MazeGenerator {
     }
 
     generate() {
-        // Simple maze pattern - 0 = path, 1 = wall
+        // Create a more complex maze pattern - 0 = path, 1 = wall
         const maze = [];
         for (let y = 0; y < this.height; y++) {
             maze[y] = [];
@@ -147,15 +194,30 @@ class MazeGenerator {
                 if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
                     maze[y][x] = 1; // Wall
                 } else {
-                    // Create some internal walls for maze-like structure
-                    maze[y][x] = (x + y) % 3 === 0 ? 1 : 0;
+                    // Create internal walls for maze-like structure
+                    // Add some randomness but ensure there are paths
+                    const random = Math.random();
+                    const pattern = (x + y) % 3 === 0;
+                    
+                    // 30% chance of wall, but ensure connectivity
+                    if (random < 0.3 && pattern) {
+                        maze[y][x] = 1; // Wall
+                    } else {
+                        maze[y][x] = 0; // Path
+                    }
                 }
             }
         }
         
-        // Ensure start and end are clear
+        // Ensure start and end are clear and create a guaranteed path
         maze[1][1] = 0; // Start position
         maze[this.height - 2][this.width - 2] = 0; // Goal position
+        
+        // Create some guaranteed paths for better gameplay
+        maze[1][2] = 0; // Path right from start
+        maze[2][1] = 0; // Path down from start
+        maze[this.height - 2][this.width - 3] = 0; // Path left to goal
+        maze[this.height - 3][this.width - 2] = 0; // Path up to goal
         
         return maze;
     }
@@ -167,33 +229,79 @@ class Ball {
         this.y = 1;
         this.baseSpeed = 200; // Base speed for keyboard controls
         this.currentSpeed = this.baseSpeed;
+        this.collisionCooldown = 0; // Prevent collision spam
     }
 
     setSpeed(speed) {
         this.currentSpeed = speed;
     }
+    
+    // Update collision cooldown
+    updateCooldown(deltaTime) {
+        if (this.collisionCooldown > 0) {
+            this.collisionCooldown -= deltaTime;
+        }
+    }
+    
+    // Trigger collision effect
+    onCollision() {
+        this.collisionCooldown = 100; // 100ms cooldown
+    }
 
-    updatePosition(direction, deltaTime) {
+    updatePosition(direction, deltaTime, maze) {
         const movement = this.currentSpeed * deltaTime / 1000;
+        const cellSize = 40; // Should match the cell size used in drawing
+        
+        // Update collision cooldown
+        this.updateCooldown(deltaTime);
+        
+        // Calculate new position
+        let newX = this.x;
+        let newY = this.y;
         
         switch (direction) {
             case 'up':
-                this.y -= movement / 40; // Convert to grid units
+                newY -= movement / 40; // Convert to grid units
                 break;
             case 'down':
-                this.y += movement / 40;
+                newY += movement / 40;
                 break;
             case 'left':
-                this.x -= movement / 40;
+                newX -= movement / 40;
                 break;
             case 'right':
-                this.x += movement / 40;
+                newX += movement / 40;
                 break;
         }
         
-        // Clamp to maze bounds
+        // Check collision with maze walls before updating position
+        if (!this.checkCollision(newX, newY, maze)) {
+            this.x = newX;
+            this.y = newY;
+        } else if (this.collisionCooldown <= 0) {
+            // Trigger collision effect
+            this.onCollision();
+        }
+        
+        // Clamp to maze bounds (backup safety)
         this.x = Math.max(0, Math.min(9, this.x));
         this.y = Math.max(0, Math.min(9, this.y));
+    }
+    
+    // Check if ball collides with walls
+    checkCollision(x, y, maze) {
+        // Get ball position in grid coordinates
+        const gridX = Math.floor(x);
+        const gridY = Math.floor(y);
+        
+        // Check if the ball would be in a wall cell
+        if (gridY >= 0 && gridY < maze.length && 
+            gridX >= 0 && gridX < maze[0].length) {
+            return maze[gridY][gridX] === 1; // 1 = wall, 0 = path
+        }
+        
+        // If outside maze bounds, consider it a collision
+        return true;
     }
 }
 
