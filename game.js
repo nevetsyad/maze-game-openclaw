@@ -774,6 +774,9 @@ class InputManager {
         this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         console.log('Device detected:', this.isMobile ? 'Mobile' : 'Desktop');
         
+        // Set input mode based on device type
+        this.inputMode = this.isMobile ? 'gyro' : 'keyboard';
+        
         // Show mobile controls on mobile devices
         const mobileControls = document.getElementById('mobileControls');
         if (mobileControls && this.isMobile) {
@@ -830,8 +833,8 @@ class InputManager {
 
     setupKeyboardControls() {
         document.addEventListener('keydown', (e) => {
-            // Only use keyboard if gyroscope is not enabled or on desktop
-            if (this.inputMode === 'keyboard' || !this.isMobile) {
+            // Use keyboard controls on desktop
+            if (!this.isMobile) {
                 switch (e.key) {
                     case 'ArrowUp':
                     case 'w':
@@ -860,51 +863,61 @@ class InputManager {
         });
         
         document.addEventListener('keyup', () => {
-            if (this.inputMode === 'keyboard' || !this.isMobile) {
+            if (!this.isMobile) {
                 this.direction = 'none';
             }
         });
     }
 
     setupTouchControls() {
-        const touchArea = document.getElementById('touchArea');
-        if (!touchArea) return;
-        
-        let touchStartX = 0;
-        let touchStartY = 0;
-        
-        touchArea.addEventListener('touchstart', (e) => {
-            // Only use touch if gyroscope is not enabled
-            if (this.inputMode !== 'gyro') {
+        // For mobile devices that don't have gyroscope or it's disabled
+        if (this.isMobile) {
+            // Create touch area overlay for mobile devices
+            const touchArea = document.createElement('div');
+            touchArea.id = 'touchArea';
+            touchArea.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 5;
+                background: transparent;
+            `;
+            document.body.appendChild(touchArea);
+            
+            let touchStartX = 0;
+            let touchStartY = 0;
+            
+            touchArea.addEventListener('touchstart', (e) => {
                 touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
                 this.inputMode = 'touch';
-            }
-        });
-        
-        touchArea.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            // Only use touch if gyroscope is not enabled
-            if (this.inputMode !== 'gyro') {
+            });
+            
+            touchArea.addEventListener('touchmove', (e) => {
+                e.preventDefault();
                 const touchX = e.touches[0].clientX;
                 const touchY = e.touches[0].clientY;
                 
                 const deltaX = touchX - touchStartX;
                 const deltaY = touchY - touchStartY;
                 
-                if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                    this.direction = deltaX > 0 ? 'right' : 'left';
-                } else {
-                    this.direction = deltaY > 0 ? 'down' : 'up';
+                const threshold = 30; // Minimum distance to register movement
+                
+                if (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold) {
+                    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                        this.direction = deltaX > 0 ? 'right' : 'left';
+                    } else {
+                        this.direction = deltaY > 0 ? 'down' : 'up';
+                    }
                 }
-            }
-        });
-        
-        touchArea.addEventListener('touchend', () => {
-            if (this.inputMode !== 'gyro') {
+            });
+            
+            touchArea.addEventListener('touchend', () => {
                 this.direction = 'none';
-            }
-        });
+            });
+        }
     }
 
     getInput() {
