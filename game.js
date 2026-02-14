@@ -19,8 +19,6 @@ class MazeGame {
         this.initGame();
     }
     
-    }
-    
     // Restart game with new settings
     restartGame() {
         this.gameStarted = false;
@@ -41,16 +39,16 @@ class MazeGame {
     initGame() {
         console.log('Initializing game...');
         try {
-            // Use dynamic maze size based on difficulty
+            // Use fixed maze size
             this.mazeGenerator = new MazeGenerator(this.mazeSize.width, this.mazeSize.height);
-            this.maze = this.mazeGenerator.generate(this.difficulty);
+            this.maze = this.mazeGenerator.generate('medium');
             this.ball = new Ball();
             this.inputManager = new InputManager();
             this.gameStarted = true;
             this.score = 0;
             this.startTime = Date.now();
             
-            console.log(`Game objects created successfully - Maze size: ${this.mazeSize.width}x${this.mazeSize.height}, Difficulty: ${this.difficulty}`);
+            console.log(`Game objects created successfully - Maze size: ${this.mazeSize.width}x${this.mazeSize.height}`);
             requestAnimationFrame(() => this.gameLoop());
         } catch (error) {
             console.error('Error in initGame:', error);
@@ -109,15 +107,13 @@ class MazeGame {
             timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         }
         
-        // Update score (based on time and difficulty)
+        // Update score (based on time)
         
         this.score = Math.max(0, 1000 - elapsedTime);
         
         const scoreDisplay = document.getElementById('scoreValue');
         if (scoreDisplay) {
             scoreDisplay.textContent = this.score;
-        }
-        
         }
     }
 
@@ -989,15 +985,12 @@ function initializeStartButton() {
             console.log('Controls info shown');
         }
         
-        // Show score and difficulty selector
+        // Show score display
         const scoreDisplay = document.getElementById('scoreDisplay');
         
         if (scoreDisplay) {
             scoreDisplay.classList.remove('hidden');
             console.log('Score display shown');
-        }
-        
-            console.log('Difficulty selector shown');
         }
         
         // Hide mobile controls on desktop
@@ -1016,36 +1009,12 @@ function initializeStartButton() {
         try {
             window.mazeGame = new MazeGame();
             console.log('Game initialized successfully!');
-            
-            // Setup difficulty selector
-            setupDifficultySelector();
         } catch (error) {
             console.error('Error initializing game:', error);
         }
     });
 }
 
-// Setup difficulty selector
-function setupDifficultySelector() {
-    console.log('Setting up difficulty selector...');
-    
-    
-    difficultyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const difficulty = this.dataset.difficulty;
-            console.log('Difficulty changed to:', difficulty);
-            
-            // Update active button
-            difficultyButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Update game difficulty
-            if (window.mazeGame) {
-                window.mazeGame.setDifficulty(difficulty);
-            }
-        });
-    });
-}
 
 // Setup gyroscope controls
 function setupGyroControls() {
