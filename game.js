@@ -56,8 +56,12 @@ class MazeGame {
     }
 
     gameLoop() {
-        if (!this.gameStarted) return;
+        if (!this.gameStarted) {
+            console.log('Game not started, skipping game loop');
+            return;
+        }
         
+        console.log('Game loop running...');
         const deltaTime = 1000 / 60; // 60fps
         
         // Update score and time
