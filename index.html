@@ -189,13 +189,22 @@
     <!-- Game Canvas -->
     <canvas id="gameCanvas" class="hidden"></canvas>
     
-    <!-- Mobile Controls - Gyroscope only -->
+    <!-- Mobile Controls - Gyroscope and Touch -->
     <div class="controls" id="mobileControls">
         <div class="gyro-info">
-            Tilt your device to move the ball
+            <div id="gyro-status">🎯 Tilt your device to move the ball</div>
+            <div id="gyro-controls" style="margin-top: 10px; display: none;">
+                <button id="calibrate-btn" class="calibrate-btn" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 15px; padding: 5px 10px; font-size: 0.8rem; cursor: pointer;">
+                    Calibrate
+                </button>
+                <button id="touch-mode-btn" class="touch-mode-btn" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 15px; padding: 5px 10px; font-size: 0.8rem; cursor: pointer;">
+                    Touch Mode
+                </button>
+            </div>
         </div>
     </div>
 
     <script src="game.js"></script>
+<script src="gyro-manager.js"></script>
 </body>
 </html>

@@ -778,35 +778,116 @@ class Ball {
 class InputManager {
     constructor() {
         this.direction = 'none';
+        this.gyroMovement = { x: 0, y: 0 };
+        this.inputMode = 'keyboard'; // keyboard, touch, gyro
+        this.isMobile = false;
+        this.gyroEnabled = false;
+        
+        // Detect mobile device
+        this.detectDevice();
+        
+        // Setup gyroscope if mobile
+        if (this.isMobile) {
+            this.setupGyroscope();
+        }
+        
+        // Setup other control methods
         this.setupKeyboardControls();
         this.setupTouchControls();
+    }
+    
+    detectDevice() {
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        console.log('Device detected:', this.isMobile ? 'Mobile' : 'Desktop');
+        
+        // Show mobile controls on mobile devices
+        const mobileControls = document.getElementById('mobileControls');
+        if (mobileControls && this.isMobile) {
+            mobileControls.style.display = 'block';
+            console.log('Mobile controls enabled');
+        }
+    }
+    
+    async setupGyroscope() {
+        try {
+            // Import GyroManager
+            const { GyroManager } = await import('./gyro-manager.js');
+            this.gyroManager = new GyroManager();
+            
+            // Initialize gyroscope
+            const success = await this.gyroManager.init();
+            
+            if (success) {
+                this.gyroEnabled = true;
+                this.inputMode = 'gyro';
+                console.log('Gyroscope enabled successfully');
+                
+                // Show calibration instructions
+                this.showCalibrationInstructions();
+            } else {
+                console.log('Gyroscope not available, falling back to touch controls');
+                this.inputMode = 'touch';
+            }
+        } catch (error) {
+            console.error('Error setting up gyroscope:', error);
+            this.inputMode = 'touch';
+        }
+    }
+    
+    showCalibrationInstructions() {
+        const mobileControls = document.getElementById('mobileControls');
+        if (mobileControls && this.gyroEnabled) {
+            mobileControls.innerHTML = `
+                <div class="gyro-info">
+                    <div>🎯 Tilt your device to move the ball</div>
+                    <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.8;">
+                        Calibrate: Tilt device to level position
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    updateGyroMovement() {
+        if (this.gyroManager && this.gyroEnabled) {
+            this.gyroMovement = this.gyroManager.updateMovement();
+        }
     }
 
     setupKeyboardControls() {
         document.addEventListener('keydown', (e) => {
-            switch (e.key) {
-                case 'ArrowUp':
-                case 'w':
-                case 'W':
-                    this.direction = 'up';
-                    break;
-                case 'ArrowDown':
-                case 's':
-                case 'S':
-                    this.direction = 'down';
-                    break;
-                case 'ArrowLeft':
-                case 'a':
-                case 'A':
-                    this.direction = 'left';
-                    break;
-                case 'ArrowRight':
-                case 'd':
-                case 'D':
-                    this.direction = 'right';
-                    break;
-                default:
-                    this.direction = 'none';
+            // Only use keyboard if gyroscope is not enabled or on desktop
+            if (this.inputMode === 'keyboard' || !this.isMobile) {
+                switch (e.key) {
+                    case 'ArrowUp':
+                    case 'w':
+                    case 'W':
+                        this.direction = 'up';
+                        break;
+                    case 'ArrowDown':
+                    case 's':
+                    case 'S':
+                        this.direction = 'down';
+                        break;
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        this.direction = 'left';
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        this.direction = 'right';
+                        break;
+                    default:
+                        this.direction = 'none';
+                }
+            }
+        });
+        
+        document.addEventListener('keyup', () => {
+            if (this.inputMode === 'keyboard' || !this.isMobile) {
+                this.direction = 'none';
             }
         });
     }
@@ -819,32 +900,79 @@ class InputManager {
         let touchStartY = 0;
         
         touchArea.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
+            // Only use touch if gyroscope is not enabled
+            if (this.inputMode !== 'gyro') {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                this.inputMode = 'touch';
+            }
         });
         
         touchArea.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            const touchX = e.touches[0].clientX;
-            const touchY = e.touches[0].clientY;
-            
-            const deltaX = touchX - touchStartX;
-            const deltaY = touchY - touchStartY;
-            
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                this.direction = deltaX > 0 ? 'right' : 'left';
-            } else {
-                this.direction = deltaY > 0 ? 'down' : 'up';
+            // Only use touch if gyroscope is not enabled
+            if (this.inputMode !== 'gyro') {
+                const touchX = e.touches[0].clientX;
+                const touchY = e.touches[0].clientY;
+                
+                const deltaX = touchX - touchStartX;
+                const deltaY = touchY - touchStartY;
+                
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    this.direction = deltaX > 0 ? 'right' : 'left';
+                } else {
+                    this.direction = deltaY > 0 ? 'down' : 'up';
+                }
             }
         });
         
         touchArea.addEventListener('touchend', () => {
-            this.direction = 'none';
+            if (this.inputMode !== 'gyro') {
+                this.direction = 'none';
+            }
         });
     }
 
     getInput() {
-        return this.direction;
+        // Priority order: Gyroscope > Touch > Keyboard
+        if (this.gyroEnabled && this.inputMode === 'gyro') {
+            this.updateGyroMovement();
+            
+            // Convert gyro movement to direction
+            const { x, y } = this.gyroMovement;
+            
+            // Threshold for movement detection
+            const threshold = 0.1;
+            
+            if (Math.abs(x) < threshold && Math.abs(y) < threshold) {
+                return 'none';
+            }
+            
+            // Determine primary direction
+            if (Math.abs(x) > Math.abs(y)) {
+                return x > 0 ? 'right' : 'left';
+            } else {
+                return y > 0 ? 'down' : 'up';
+            }
+        } else if (this.inputMode === 'touch') {
+            return this.direction;
+        } else {
+            return this.direction;
+        }
+    }
+    
+    getGyroStatus() {
+        if (this.gyroManager) {
+            return this.gyroManager.testConnection();
+        }
+        return { supported: false, enabled: false };
+    }
+    
+    calibrateGyroscope() {
+        if (this.gyroManager) {
+            this.gyroManager.calibrate();
+            this.showCalibrationInstructions();
+        }
     }
 }
 
