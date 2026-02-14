@@ -1,14 +1,23 @@
 class MazeGame {
     constructor() {
         console.log('MazeGame constructor called');
+        console.log('Looking for game canvas...');
         this.canvas = document.getElementById('gameCanvas');
+        console.log('Canvas found:', this.canvas);
+        
         if (!this.canvas) {
             console.error('Game canvas not found!');
             return;
         }
         
+        console.log('Getting 2D context...');
         this.ctx = this.canvas.getContext('2d');
+        console.log('Context obtained:', this.ctx);
+        
+        console.log('Setting up responsive...');
         this.setupResponsive();
+        
+        console.log('Initializing game...');
         this.initGame();
     }
 
@@ -472,11 +481,10 @@ class InputManager {
 
 // Start button functionality
 function initializeStartButton() {
+    console.log('initializeStartButton called');
+    
     const startButton = document.getElementById('startButton');
-    const startScreen = document.getElementById('startScreen');
-    const gameCanvas = document.getElementById('gameCanvas');
-    const controlsInfo = document.getElementById('controlsInfo');
-    const mobileControls = document.getElementById('mobileControls');
+    console.log('Start button element:', startButton);
     
     if (!startButton) {
         console.error('Start button not found!');
@@ -488,16 +496,28 @@ function initializeStartButton() {
     startButton.addEventListener('click', function() {
         console.log('Start button clicked!');
         
+        const startScreen = document.getElementById('startScreen');
+        const gameCanvas = document.getElementById('gameCanvas');
+        const controlsInfo = document.getElementById('controlsInfo');
+        const mobileControls = document.getElementById('mobileControls');
+        
+        console.log('Start screen element:', startScreen);
+        console.log('Game canvas element:', gameCanvas);
+        
         // Hide start screen
         if (startScreen) {
             startScreen.classList.add('hidden');
             console.log('Start screen hidden');
+        } else {
+            console.error('Start screen not found!');
         }
         
         // Show game elements
         if (gameCanvas) {
             gameCanvas.classList.remove('hidden');
             console.log('Game canvas shown');
+        } else {
+            console.error('Game canvas not found!');
         }
         
         if (controlsInfo) {
@@ -523,6 +543,7 @@ function initializeStartButton() {
             console.log('Game initialized successfully!');
         } catch (error) {
             console.error('Error initializing game:', error);
+            console.error('Error details:', error.stack);
         }
     });
 }
