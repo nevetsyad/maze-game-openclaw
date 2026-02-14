@@ -6,36 +6,32 @@ class MazeGenerator {
     }
 
     generate() {
-        // Recursive backtracking algorithm implementation
+        // Create a simple maze with guaranteed path from start to goal
+        // 0 = path, 1 = wall
         const maze = Array.from({length: this.height}, () => 
-            Array.from({length: this.width}, () => ({
-                visited: false,
-                walls: { top: true, right: true, bottom: true, left: true }
-            })))
-        ;
-
-        const stack = [];
-        let startCell = { x: 0, y: 0 };
-        maze[startCell.y][startCell.x].visited = true;
-        stack.push(startCell);
-
-
-        while (stack.length > 0) {
-            const current = stack[stack.length - 1];
-            const neighbors = this.getUnvisitedNeighbors(maze, current);
-
-
-            if (neighbors.length > 0) {
-                const next = neighbors[Math.floor(Math.random() * neighbors.length)];
-                this.removeWalls(current, next);
-                stack.push(next);
-                maze[next.y][next.x].visited = true;
-            } else {
-                stack.pop();
-            }
+            Array.from({length: this.width}, () => 1)
+        );
+        
+        // Create guaranteed path from start to goal
+        // Simple horizontal then vertical path
+        for (let x = 0; x < this.width; x++) {
+            maze[0][x] = 0; // Top row path
         }
-
-
+        for (let y = 0; y < this.height; y++) {
+            maze[y][this.width - 1] = 0; // Right column path
+        }
+        
+        // Add some additional paths to make it more interesting
+        for (let i = 0; i < Math.floor(this.width * this.height * 0.3); i++) {
+            const x = Math.floor(Math.random() * (this.width - 2)) + 1;
+            const y = Math.floor(Math.random() * (this.height - 2)) + 1;
+            maze[y][x] = 0;
+        }
+        
+        // Ensure start and goal positions are clear
+        maze[0][0] = 0; // Start position
+        maze[this.height - 1][this.width - 1] = 0; // Goal position
+        
         return maze;
     }
 

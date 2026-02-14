@@ -61,7 +61,6 @@ class MazeGame {
             return;
         }
         
-        console.log('Game loop running...');
         const deltaTime = 1000 / 60; // 60fps
         
         // Update score and time
@@ -76,7 +75,6 @@ class MazeGame {
         
         // Update ball position
         const input = this.inputManager.getInput();
-        console.log('Input received:', input);
         this.ball.updatePosition(input, deltaTime, this.maze);
         
         // Draw ball
@@ -660,7 +658,6 @@ class Ball {
     }
 
     updatePosition(direction, deltaTime, maze) {
-        console.log('Ball updatePosition called with direction:', direction);
         const movement = this.currentSpeed * deltaTime / 1000;
         
         // Update collision cooldown
@@ -676,19 +673,15 @@ class Ball {
             switch (direction) {
                 case 'up':
                     newY -= movement / 10; // Convert to grid units
-                    console.log('Moving up: newY =', newY);
                     break;
                 case 'down':
                     newY += movement / 10;
-                    console.log('Moving down: newY =', newY);
                     break;
                 case 'left':
                     newX -= movement / 10;
-                    console.log('Moving left: newX =', newX);
                     break;
                 case 'right':
                     newX += movement / 10;
-                    console.log('Moving right: newX =', newX);
                     break;
             }
         } else if (typeof direction === 'object' && direction.x !== undefined && direction.y !== undefined) {
