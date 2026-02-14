@@ -11,34 +11,14 @@ class MazeGame {
         this.setupResponsive();
         
         // Game settings
-        this.difficulty = 'medium'; // easy, medium, hard
-        this.mazeSize = this.getMazeSizeByDifficulty();
+        this.mazeSize = { width: 15, height: 15 }; // Fixed size maze
         this.score = 0;
         this.startTime = Date.now();
         
-        console.log('Initializing game with difficulty:', this.difficulty);
+        console.log('Initializing game with maze size:', this.mazeSize);
         this.initGame();
     }
     
-    // Get maze size based on difficulty
-    getMazeSizeByDifficulty() {
-        switch (this.difficulty) {
-            case 'easy':
-                return { width: 10, height: 10 };
-            case 'medium':
-                return { width: 15, height: 15 };
-            case 'hard':
-                return { width: 20, height: 20 };
-            default:
-                return { width: 15, height: 15 };
-        }
-    }
-    
-    // Set difficulty level
-    setDifficulty(level) {
-        this.difficulty = level;
-        this.mazeSize = this.getMazeSizeByDifficulty();
-        this.restartGame();
     }
     
     // Restart game with new settings
@@ -92,10 +72,13 @@ class MazeGame {
         // Draw maze
         this.drawMaze();
         
+        // Update gyroscope movement before getting input
+        this.inputManager.updateGyroMovement();
+        
         // Update ball position
-        const direction = this.inputManager.getInput();
-        if (direction !== 'none') {
-            this.ball.updatePosition(direction, deltaTime, this.maze);
+        const input = this.inputManager.getInput();
+        if (input !== 'none') {
+            this.ball.updatePosition(input, deltaTime, this.maze);
         }
         
         // Draw ball
@@ -127,28 +110,14 @@ class MazeGame {
         }
         
         // Update score (based on time and difficulty)
-        const difficultyMultiplier = {
-            'easy': 1,
-            'medium': 2,
-            'hard': 3
-        };
         
-        this.score = Math.max(0, 1000 - elapsedTime * difficultyMultiplier[this.difficulty]);
+        this.score = Math.max(0, 1000 - elapsedTime);
         
         const scoreDisplay = document.getElementById('scoreValue');
         if (scoreDisplay) {
             scoreDisplay.textContent = this.score;
         }
         
-        // Update difficulty display
-        const difficultyDisplay = document.getElementById('difficultyDisplay');
-        if (difficultyDisplay) {
-            const difficultyNames = {
-                'easy': 'Easy',
-                'medium': 'Medium', 
-                'hard': 'Hard'
-            };
-            difficultyDisplay.textContent = difficultyNames[this.difficulty];
         }
     }
 
@@ -704,19 +673,28 @@ class Ball {
         let newX = this.x;
         let newY = this.y;
         
-        switch (direction) {
-            case 'up':
-                newY -= movement / 40; // Convert to grid units
-                break;
-            case 'down':
-                newY += movement / 40;
-                break;
-            case 'left':
-                newX -= movement / 40;
-                break;
-            case 'right':
-                newX += movement / 40;
-                break;
+        // Handle different input types
+        if (typeof direction === 'string') {
+            // Traditional directional input (keyboard/touch)
+            switch (direction) {
+                case 'up':
+                    newY -= movement / 40; // Convert to grid units
+                    break;
+                case 'down':
+                    newY += movement / 40;
+                    break;
+                case 'left':
+                    newX -= movement / 40;
+                    break;
+                case 'right':
+                    newX += movement / 40;
+                    break;
+            }
+        } else if (typeof direction === 'object' && direction.x !== undefined && direction.y !== undefined) {
+            // Gyroscope-style continuous movement
+            const movementMultiplier = 0.5; // Adjust gyroscope sensitivity
+            newX += direction.x * movement * movementMultiplier / 40;
+            newY += direction.y * movement * movementMultiplier / 40;
         }
         
         // Check collision with maze walls before updating position
@@ -1013,15 +991,12 @@ function initializeStartButton() {
         
         // Show score and difficulty selector
         const scoreDisplay = document.getElementById('scoreDisplay');
-        const difficultySelector = document.getElementById('difficultySelector');
         
         if (scoreDisplay) {
             scoreDisplay.classList.remove('hidden');
             console.log('Score display shown');
         }
         
-        if (difficultySelector) {
-            difficultySelector.classList.remove('hidden');
             console.log('Difficulty selector shown');
         }
         
@@ -1054,7 +1029,6 @@ function initializeStartButton() {
 function setupDifficultySelector() {
     console.log('Setting up difficulty selector...');
     
-    const difficultyButtons = document.querySelectorAll('.difficulty-btn');
     
     difficultyButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -1073,16 +1047,115 @@ function setupDifficultySelector() {
     });
 }
 
+// Setup gyroscope controls
+function setupGyroControls() {
+    console.log('Setting up gyroscope controls...');
+    
+    const calibrateBtn = document.getElementById('calibrate-btn');
+    const touchModeBtn = document.getElementById('touch-mode-btn');
+    const gyroControls = document.getElementById('gyro-controls');
+    const gyroStatus = document.getElementById('gyro-status');
+    
+    if (!calibrateBtn || !touchModeBtn) {
+        console.log('Gyro control buttons not found');
+        return;
+    }
+    
+    // Calibrate button
+    calibrateBtn.addEventListener('click', function() {
+        console.log('Calibrating gyroscope...');
+        
+        if (window.mazeGame && window.mazeGame.inputManager) {
+            window.mazeGame.inputManager.calibrateGyroscope();
+            
+            // Show calibrating status
+            gyroStatus.textContent = '🔄 Calibrating...';
+            gyroStatus.className = 'gyro-status calibrating';
+            
+            // Hide after 2 seconds
+            setTimeout(() => {
+                updateGyroStatus();
+            }, 2000);
+        }
+    });
+    
+    // Touch mode button
+    touchModeBtn.addEventListener('click', function() {
+        console.log('Switching to touch mode...');
+        
+        if (window.mazeGame && window.mazeGame.inputManager) {
+            window.mazeGame.inputManager.inputMode = 'touch';
+            window.mazeGame.inputManager.gyroEnabled = false;
+            
+            // Update button states
+            touchModeBtn.classList.add('active');
+            calibrateBtn.style.display = 'none';
+            
+            // Update status
+            gyroStatus.textContent = '📱 Touch controls enabled';
+            gyroStatus.className = 'gyro-status';
+            
+            console.log('Switched to touch controls');
+        }
+    });
+    
+    // Update gyroscope status periodically
+    setInterval(updateGyroStatus, 2000);
+}
+
+// Update gyroscope status display
+function updateGyroStatus() {
+    if (!window.mazeGame || !window.mazeGame.inputManager) return;
+    
+    const gyroStatus = document.getElementById('gyro-status');
+    const gyroControls = document.getElementById('gyro-controls');
+    const calibrateBtn = document.getElementById('calibrate-btn');
+    const touchModeBtn = document.getElementById('touch-mode-btn');
+    
+    if (!gyroStatus) return;
+    
+    const status = window.mazeGame.inputManager.getGyroStatus();
+    
+    if (status.enabled && status.hasRecentData) {
+        gyroStatus.textContent = '🎯 Gyroscope working - Tilt to move!';
+        gyroStatus.className = 'gyro-status working';
+        gyroControls.style.display = 'block';
+        calibrateBtn.style.display = 'inline-block';
+        touchModeBtn.classList.remove('active');
+    } else if (status.enabled) {
+        gyroStatus.textContent = '🎯 Tilt your device to move the ball';
+        gyroStatus.className = 'gyro-status';
+        gyroControls.style.display = 'block';
+        calibrateBtn.style.display = 'inline-block';
+        touchModeBtn.classList.remove('active');
+    } else if (status.supported) {
+        gyroStatus.textContent = '⚠️ Gyroscope not available - Using touch controls';
+        gyroStatus.className = 'gyro-status error';
+        gyroControls.style.display = 'block';
+        calibrateBtn.style.display = 'none';
+        touchModeBtn.classList.add('active');
+    } else {
+        gyroStatus.textContent = '📱 Touch controls active';
+        gyroStatus.className = 'gyro-status';
+        gyroControls.style.display = 'none';
+    }
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM content loaded');
     initializeStartButton();
+    setupGyroControls();
 });
 
 // Also initialize if DOM is already loaded
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeStartButton);
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeStartButton();
+        setupGyroControls();
+    });
 } else {
-    console.log('DOM already loaded, initializing start button');
+    console.log('DOM already loaded, initializing start button and gyro controls');
     initializeStartButton();
+    setupGyroControls();
 }

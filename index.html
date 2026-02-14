@@ -99,6 +99,40 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
+        .gyro-status {
+            margin-bottom: 8px;
+        }
+        
+        .gyro-controls button {
+            margin: 0 3px;
+            transition: all 0.3s ease;
+        }
+        
+        .gyro-controls button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .gyro-controls button.active {
+            background: rgba(76, 205, 196, 0.8);
+            border-color: #4ecdc4;
+        }
+        
+        .gyro-status.working {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+        
+        .gyro-status.error {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .gyro-status.calibrating {
+            color: #ffd93d;
+            font-weight: bold;
+        }
+        
         /* Score and UI */
         .score-display {
             position: fixed;
@@ -113,41 +147,6 @@
             z-index: 100;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .difficulty-selector {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 100;
-        }
-        
-        .difficulty-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .difficulty-btn {
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-        
-        .difficulty-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
-        }
-        
-        .difficulty-btn.active {
-            background: rgba(76, 205, 196, 0.8);
-            border-color: #4ecdc4;
         }
         
         .hidden {
@@ -174,16 +173,6 @@
     <div class="score-display hidden" id="scoreDisplay">
         <div>Time: <span id="timeDisplay">0:00</span></div>
         <div>Score: <span id="scoreValue">0</span></div>
-        <div>Difficulty: <span id="difficultyDisplay">Medium</span></div>
-    </div>
-    
-    <!-- Difficulty Selector -->
-    <div class="difficulty-selector hidden" id="difficultySelector">
-        <div class="difficulty-buttons">
-            <button class="difficulty-btn" data-difficulty="easy">Easy</button>
-            <button class="difficulty-btn active" data-difficulty="medium">Medium</button>
-            <button class="difficulty-btn" data-difficulty="hard">Hard</button>
-        </div>
     </div>
     
     <!-- Game Canvas -->

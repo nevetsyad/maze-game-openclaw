@@ -96,7 +96,32 @@ To run locally:
 
 The game automatically detects the device type and shows appropriate controls:
 - **Desktop**: Keyboard controls with on-screen instructions
-- **Mobile**: Touch controls with joystick interface
+- **Mobile**: Smart control detection with multiple options:
+  - **Gyroscope Controls**: Tilt your device to move the ball (preferred on supported devices)
+  - **Touch Controls**: On-screen joystick interface (fallback option)
+  - **Auto-calibration**: Automatic gyroscope calibration for accurate tilt detection
+
+### Gyroscope Features
+
+- **iOS & Android Support**: Works on both iOS and Android devices
+- **Permission Handling**: Automatic permission requests for iOS devices
+- **Smart Calibration**: One-click calibration for optimal performance
+- **Fallback Support**: Graceful fallback to touch controls if gyroscope unavailable
+- **Device Detection**: Automatic detection of device capabilities
+- **Status Monitoring**: Real-time gyroscope status display
+
+### Mobile Controls
+
+1. **Gyroscope Mode (Default)**: Tilt your device to control the ball movement
+2. **Touch Mode**: Use the on-screen joystick as a fallback
+3. **Calibration**: Tap "Calibrate" button to reset gyroscope baseline
+
+### Device Compatibility
+
+- **iOS**: Full support with permission handling
+- **Android**: Full support with device motion detection
+- **Desktop**: Keyboard controls only
+- **Tablets**: Full gyroscope support in both portrait and landscape modes
 
 ## 🔧 Customization
 
