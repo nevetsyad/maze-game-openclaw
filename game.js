@@ -674,23 +674,23 @@ class Ball {
             // Traditional directional input (keyboard/touch)
             switch (direction) {
                 case 'up':
-                    newY -= movement / 20; // Convert to grid units
+                    newY -= movement / 10; // Convert to grid units
                     break;
                 case 'down':
-                    newY += movement / 20;
+                    newY += movement / 10;
                     break;
                 case 'left':
-                    newX -= movement / 20;
+                    newX -= movement / 10;
                     break;
                 case 'right':
-                    newX += movement / 20;
+                    newX += movement / 10;
                     break;
             }
         } else if (typeof direction === 'object' && direction.x !== undefined && direction.y !== undefined) {
             // Gyroscope-style continuous movement
             const movementMultiplier = 0.5; // Adjust gyroscope sensitivity
-            newX += direction.x * movement * movementMultiplier / 20;
-            newY += direction.y * movement * movementMultiplier / 20;
+            newX += direction.x * movement * movementMultiplier / 10;
+            newY += direction.y * movement * movementMultiplier / 10;
         }
         
         // Check collision with maze walls before updating position
@@ -1036,6 +1036,12 @@ function initializeStartButton() {
         try {
             window.mazeGame = new MazeGame();
             console.log('Game initialized successfully!');
+            
+            // Start the game loop if it's not running
+            if (window.mazeGame && window.mazeGame.gameStarted) {
+                console.log('Starting game loop...');
+                window.mazeGame.gameLoop();
+            }
         } catch (error) {
             console.error('Error initializing game:', error);
         }
