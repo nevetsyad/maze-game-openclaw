@@ -554,6 +554,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeStartButton();
 });
 
+// Simple test to see if JavaScript is executing
+console.log('JavaScript is executing!');
+
 // Also initialize if DOM is already loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeStartButton);
