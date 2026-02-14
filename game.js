@@ -75,9 +75,7 @@ class MazeGame {
         
         // Update ball position
         const input = this.inputManager.getInput();
-        if (input !== 'none') {
-            this.ball.updatePosition(input, deltaTime, this.maze);
-        }
+        this.ball.updatePosition(input, deltaTime, this.maze);
         
         // Draw ball
         this.drawBall();
@@ -674,23 +672,23 @@ class Ball {
             // Traditional directional input (keyboard/touch)
             switch (direction) {
                 case 'up':
-                    newY -= movement / 40; // Convert to grid units
+                    newY -= movement / 20; // Convert to grid units
                     break;
                 case 'down':
-                    newY += movement / 40;
+                    newY += movement / 20;
                     break;
                 case 'left':
-                    newX -= movement / 40;
+                    newX -= movement / 20;
                     break;
                 case 'right':
-                    newX += movement / 40;
+                    newX += movement / 20;
                     break;
             }
         } else if (typeof direction === 'object' && direction.x !== undefined && direction.y !== undefined) {
             // Gyroscope-style continuous movement
             const movementMultiplier = 0.5; // Adjust gyroscope sensitivity
-            newX += direction.x * movement * movementMultiplier / 40;
-            newY += direction.y * movement * movementMultiplier / 40;
+            newX += direction.x * movement * movementMultiplier / 20;
+            newY += direction.y * movement * movementMultiplier / 20;
         }
         
         // Check collision with maze walls before updating position
