@@ -984,6 +984,15 @@ function initializeStartButton() {
         if (gameCanvas) {
             gameCanvas.classList.remove('hidden');
             console.log('Game canvas shown');
+            
+            // Add click handler to focus canvas
+            gameCanvas.addEventListener('click', function() {
+                gameCanvas.focus();
+            });
+            
+            // Focus the canvas to capture keyboard events
+            gameCanvas.focus();
+            gameCanvas.tabIndex = 0; // Make it focusable
         }
         
         if (controlsInfo) {
@@ -1020,6 +1029,12 @@ function initializeStartButton() {
             if (window.mazeGame && window.mazeGame.gameStarted) {
                 console.log('Starting game loop...');
                 window.mazeGame.gameLoop();
+            }
+            
+            // Focus the canvas to capture keyboard events
+            if (gameCanvas) {
+                gameCanvas.focus();
+                gameCanvas.tabIndex = 0; // Make it focusable
             }
         } catch (error) {
             console.error('Error initializing game:', error);
